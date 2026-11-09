@@ -383,12 +383,12 @@ class Question:
         # Don't need to display information about secrets
         # If there is no last answer, this is irrelevant.
         if not self.secret and self.var_name in self.answers.last:
-            upstream = self.get_upstream_default()
+            upstream = self._get_upstream_default()
             if upstream is not MISSING:
                 upstream = self.parse_answer(upstream)
                 previous = self.parse_answer(self.answers.last[self.var_name])
                 if upstream != previous:
-                    return f"New template default: {upstream!r}\n"
+                    return f"(Actual default: {upstream!r})\n"
         return ""
 
 
