@@ -379,15 +379,30 @@ class Question:
             result.append(c)
         return result
 
+    def _format_upstream_default(self) -> str:
+        # Don't need to display information about secrets
+        # If there is no last answer, this is irrelevant.
+        if not self.secret and self.var_name in self.answers.last:
+            upstream = self.get_upstream_default()
+            if upstream is not MISSING:
+                upstream = self.parse_answer(upstream)
+                previous = self.parse_answer(self.answers.last[self.var_name])
+                if upstream != previous:
+                    return f"New template default: {upstream!r}\n"
+        return ""
+
+
     def get_message(self) -> str:
         """Get the message that will be printed to the user."""
+        upstream_default = self._format_upstream_default()
         if self.help and (rendered_help := self.render_value(self.help)):
-            return force_str_end(rendered_help) + "  "
+            return force_str_end(rendered_help) + upstream_default + "  "
         # Otherwise, there's no help message defined.
         message = self.var_name
         if (answer_type := self.get_type_name()) != "str":
             message += f" ({answer_type})"
-        return message + "\n  "
+
+        return message + "\n" + upstream_default + "  "
 
     def get_placeholder(self) -> str:
         """Render and obtain the placeholder."""
