@@ -270,7 +270,7 @@ class Question:
                 return answer
             raise InvalidTypeError from error
 
-    def get_upstream_default(self) -> Any:
+    def _get_upstream_default(self) -> Any:
         """Get the template default, rendered but not parsed or validated."""
         try:
             result = self.answers.user_defaults[self.var_name]
@@ -295,7 +295,7 @@ class Question:
             try:
                 result = self.answers.last[self.var_name]
             except KeyError:
-                result = self.get_upstream_default()
+                result = self._get_upstream_default()
         if result is MISSING:
             return MISSING
         result = self.parse_answer(result)
