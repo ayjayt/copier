@@ -270,6 +270,23 @@ class Question:
                 return answer
             raise InvalidTypeError from error
 
+    def get_upstream_default(self) -> Any:
+        """Get the template default, rendered but not parsed or validated."""
+        try:
+            result = self.answers.user_defaults[self.var_name]
+        except KeyError:
+            try:
+                result = self.render_value(
+                    self.settings.defaults.get(self.var_name, self.default),
+                    extra_answers={
+                        "UNSET": StrictUndefined("UNSET", exc=UnsetError)
+                    },
+                )
+            except UnsetError:
+                return MISSING
+        return result
+
+
     def get_default(self) -> Any:
         """Get the default value for this question, casted to its expected type."""
         try:
@@ -278,20 +295,9 @@ class Question:
             try:
                 result = self.answers.last[self.var_name]
             except KeyError:
-                try:
-                    result = self.answers.user_defaults[self.var_name]
-                except KeyError:
-                    try:
-                        result = self.render_value(
-                            self.settings.defaults.get(self.var_name, self.default),
-                            extra_answers={
-                                "UNSET": StrictUndefined("UNSET", exc=UnsetError)
-                            },
-                        )
-                    except UnsetError:
-                        return MISSING
-                    if result is MISSING:
-                        return MISSING
+                result = self.get_upstream_default()
+        if result is MISSING:
+            return MISSING
         result = self.parse_answer(result)
         # Computed values (i.e., `when: false`) are intentionally not validated
         # at the moment.
